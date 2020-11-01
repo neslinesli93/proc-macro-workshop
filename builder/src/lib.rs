@@ -42,6 +42,30 @@ pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
                 self.current_dir = Some(current_dir);
                 self
             }
+
+            pub fn build(&mut self) -> Result<#struct_name, Box<dyn std::error::Error>> {
+                use std::convert::TryFrom;
+
+                #struct_name::try_from(self).map_err(|error| error.into())
+            }
+        }
+
+        impl std::convert::TryFrom<&mut #internal_struct> for #struct_name {
+            type Error = String;
+
+            fn try_from(value: &mut #internal_struct) -> Result<#struct_name, Self::Error> {
+                let executable = value.executable.to_owned().ok_or_else(|| "Missing field: 'executable'".to_string())?;
+                let args = value.args.to_owned().ok_or_else(|| "Missing field: 'args'".to_string())?;
+                let env = value.env.to_owned().ok_or_else(|| "Missing field: 'env'".to_string())?;
+                let current_dir = value.current_dir.to_owned().ok_or_else(|| "Missing field: 'current_dir'".to_string())?;
+
+                Ok(#struct_name {
+                    executable,
+                    args,
+                    env,
+                    current_dir,
+                })
+            }
         }
 
         pub struct #internal_struct {
